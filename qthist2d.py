@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def qthist(x, y, N=5, thresh=4, range=[], density=True):
+def qthist(x, y, N=5, thresh=4, rng=[], density=True):
     '''
     Use a simple QuadTree approach to dynamically segment 2D
     data and compute a histogram (counts per bin). Since bin
@@ -51,14 +51,14 @@ def qthist(x, y, N=5, thresh=4, range=[], density=True):
     
     # Step thru each level of the Tree
     for k in range(1, N+1):
-        if len(range) == 0:
+        if len(rng) == 0:
             dx = (np.nanmax(x) - np.nanmin(x)) / (2**k)
             dy = (np.nanmax(y) - np.nanmin(y)) / (2**k)
-            range = [[np.nanmin(x)-dx/4, np.nanmax(x)+dx/4], 
-                     [np.nanmin(y)-dy/4, np.nanmax(y)+dy/4]]
+            rng = [[np.nanmin(x)-dx/4, np.nanmax(x)+dx/4], 
+                   [np.nanmin(y)-dy/4, np.nanmax(y)+dy/4]]
 
         # lazily compute histogram of all data at this level
-        H1, xedges1, yedges1 = np.histogram2d(x, y, range=range, bins=2**k,)
+        H1, xedges1, yedges1 = np.histogram2d(x, y, range=rng, bins=2**k,)
 
         # any leafs at this level to pick, but NOT previously picked?
         if k<N:
