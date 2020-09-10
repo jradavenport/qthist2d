@@ -1,8 +1,41 @@
 import numpy as np
 
 
-def qthist(x,y, N=5, thresh=4, rng=[], density=False):
+def qthist(x, y, N=5, thresh=4, range=[], density=True):
     '''
+    Use a simple QuadTree approach to dynamically segment 2D
+    data and compute a histogram (counts per bin). Since bin
+    sizes are variable, by default the histogram returns the 
+    density (counts/area).
+    
+    QuadTree algorithm is implemented with `np.histogram2d`.
+    
+    Parameters
+    ----------
+    x, y : the 2 arrays of data to compute the histogram of
+    N : int, optional, default = 5
+        the number of levels to compute the QuadTree. Results
+        in a maximum of [2**N, 2**N] bins
+    thresh : int, optional, default = 4
+        the number of points per bin to allow. Will keep
+        segmenting bins until N levels is reached.
+    range : the XY range to compute histogram over. Follows
+        np.histogram2d convention, shape(2,2), optional.
+        ``[[xmin, xmax], [ymin, ymax]]``. If not specified,
+        `qthist` will use the XY limits of the data with a 
+        buffer of 1/4 the minimum bin size on each side.
+    density : bool, optional, default = True
+        If False, the default, returns the number of samples in each bin.
+        If True, returns the probability *density* function at the bin:
+        ``num / len(x) / bin_area``.
+    
+    Returns
+    -------
+    num, xmin, xmax, ymin, ymax
+    
+    num : the array of number counts or densities per bin
+    xmin,xmax,ymin,ymax : the left, right, bottom, top 
+        edges of each bin
     
     '''
     
@@ -18,14 +51,14 @@ def qthist(x,y, N=5, thresh=4, rng=[], density=False):
     
     # Step thru each level of the Tree
     for k in range(1, N+1):
-        if len(rng) == 0:
+        if len(range) == 0:
             dx = (np.nanmax(x) - np.nanmin(x)) / (2**k)
             dy = (np.nanmax(y) - np.nanmin(y)) / (2**k)
-            rng = [[np.nanmin(x)-dx/4, np.nanmax(x)+dx/4], 
-                   [np.nanmin(y)-dy/4, np.nanmax(y)+dy/4]]
+            range = [[np.nanmin(x)-dx/4, np.nanmax(x)+dx/4], 
+                     [np.nanmin(y)-dy/4, np.nanmax(y)+dy/4]]
 
         # lazily compute histogram of all data at this level
-        H1, xedges1, yedges1 = np.histogram2d(x, y, range=rng, bins=2**k,)
+        H1, xedges1, yedges1 = np.histogram2d(x, y, range=range, bins=2**k,)
 
         # any leafs at this level to pick, but NOT previously picked?
         if k<N:
@@ -62,10 +95,25 @@ def qthist(x,y, N=5, thresh=4, rng=[], density=False):
     return num, xmin, xmax, ymin, ymax
 
 
-def qtcount(x,y,xmin, xmax, ymin, ymax, density=False):
+def qtcount(x,y,xmin, xmax, ymin, ymax, density=True):
     '''
     given rectangular output ranges for cells/leafs from QThist
     count the occurence rate of NEW data in these cells
+    
+    Parameters
+    ----------
+    x, y : the 2 arrays of new data to compute the histogram from
+    xmin,xmax,ymin,ymax : the left, right, bottom, top 
+        edges of each bin, e.g. from previous ``qthist``.
+        
+    density : bool, optional, default = True
+        If False, the default, returns the number of samples in each bin.
+        If True, returns the probability *density* function at the bin:
+        ``num / len(x) / bin_area``.
+    
+    Returns
+    -------    
+    num : the array of number counts or densities per bin
     '''
     
     num = np.zeros_like(xmin)
