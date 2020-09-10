@@ -36,30 +36,27 @@ def qthist(x,y, N=5, thresh=4, rng=[], density=False):
 
         Mprep = np.empty((2**(k+1),2**(k+1)),dtype='Bool')*False
         
-        # if all the leafs are already picked, then stop checking
-        if np.sum(M1) != np.size(M1):
+        # check leafs at this level
+        for i in range(M1.shape[0]):
+            for j in range(M1.shape[1]):
+                # up-scale the leaf-picking True/False to next level
+                if k<N:
+                    Mprep[(i*2):((i+1)*2),(j*2):((j+1)*2)] = M1[i,j] | Mnext[i,j]
 
-            # check leafs at this level
-            for i in range(M1.shape[0]):
-                for j in range(M1.shape[1]):
-                    # up-scale the leaf-picking True/False to next level
-                    if k<N:
-                        Mprep[(i*2):((i+1)*2),(j*2):((j+1)*2)] = M1[i,j] | Mnext[i,j]
-
-                    # if newly ready to pick, save 5 values
-                    if M1[i,j] & ~Mnext[i,j]:
-                        num = np.append(num, H1[i,j])
-                        xmin = np.append(xmin, xedges1[i])
-                        xmax = np.append(xmax, xedges1[i+1])
-                        ymin = np.append(ymin, yedges1[j])
-                        ymax = np.append(ymax, yedges1[j+1])
+                # if newly ready to pick, save 5 values
+                if M1[i,j] & ~Mnext[i,j]:
+                    num = np.append(num, H1[i,j])
+                    xmin = np.append(xmin, xedges1[i])
+                    xmax = np.append(xmax, xedges1[i+1])
+                    ymin = np.append(ymin, yedges1[j])
+                    ymax = np.append(ymax, yedges1[j+1])
 
         Mnext = Mprep
 
     if density:
-#   following example from np.histogram:
-#   result is the value of the probability *density* function at the bin, 
-#   normalized such that the *integral* over the range is 1
+        # following example from np.histogram:
+        # result is the value of the probability *density* function at the bin, 
+        # normalized such that the *integral* over the range is 1
         num = num / ((ymax - ymin) * (xmax - xmin)) / num.sum()
         
     return num, xmin, xmax, ymin, ymax
@@ -76,11 +73,11 @@ def qtcount(x,y,xmin, xmax, ymin, ymax, density=False):
         num[k] = np.sum((x >= xmin[k]) & (x < xmax[k]) & 
                         (y >= ymin[k]) & (y < ymax[k]))
         
-    
     if density:
-#   following example from np.histogram:
-#   result is the value of the probability *density* function at the bin, 
-#   normalized such that the *integral* over the range is 1
+        # following example from np.histogram:
+        # result is the value of the probability *density* function at the bin, 
+        # normalized such that the *integral* over the range is 1
+
         num = num / ((ymax - ymin) * (xmax - xmin)) / num.sum()
 
     return num
