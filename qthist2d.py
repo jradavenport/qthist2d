@@ -5,11 +5,11 @@ def qthist(x, y, N=5, thresh=4, rng=[], density=True):
     '''
     Use a simple QuadTree approach to dynamically segment 2D
     data and compute a histogram (counts per bin). Since bin
-    sizes are variable, by default the histogram returns the 
+    sizes are variable, by default the histogram returns the
     density (counts/area).
-    
+
     QuadTree algorithm is implemented with `np.histogram2d`.
-    
+
     Parameters
     ----------
     x, y : the 2 arrays of data to compute the histogram of
@@ -22,39 +22,39 @@ def qthist(x, y, N=5, thresh=4, rng=[], density=True):
     range : the XY range to compute histogram over. Follows
         np.histogram2d convention, shape(2,2), optional.
         ``[[xmin, xmax], [ymin, ymax]]``. If not specified,
-        `qthist` will use the XY limits of the data with a 
+        `qthist` will use the XY limits of the data with a
         buffer of 1/4 the minimum bin size on each side.
     density : bool, optional, default = True
         If False, the default, returns the number of samples in each bin.
         If True, returns the probability *density* function at the bin:
         ``num / len(x) / bin_area``.
-    
+
     Returns
     -------
     num, xmin, xmax, ymin, ymax
-    
+
     num : the array of number counts or densities per bin
-    xmin,xmax,ymin,ymax : the left, right, bottom, top 
+    xmin,xmax,ymin,ymax : the left, right, bottom, top
         edges of each bin
-    
+
     '''
-    
+
     # start w/ 2x2 array of False leafs
     Mnext = np.empty((2**1,2**1),dtype='Bool')*False
-    
+
     # the 5 quantities to save in our Tree
     num = np.array([])
     xmin = np.array([])
     xmax = np.array([])
     ymin = np.array([])
     ymax = np.array([])
-    
+
     # Step thru each level of the Tree
     for k in range(1, N+1):
         if len(rng) == 0:
             dx = (np.nanmax(x) - np.nanmin(x)) / (2**k)
             dy = (np.nanmax(y) - np.nanmin(y)) / (2**k)
-            rng = [[np.nanmin(x)-dx/4, np.nanmax(x)+dx/4], 
+            rng = [[np.nanmin(x)-dx/4, np.nanmax(x)+dx/4],
                    [np.nanmin(y)-dy/4, np.nanmax(y)+dy/4]]
 
         # lazily compute histogram of all data at this level
@@ -68,7 +68,7 @@ def qthist(x, y, N=5, thresh=4, rng=[], density=True):
             M1 = ~Mnext
 
         Mprep = np.empty((2**(k+1),2**(k+1)),dtype='Bool')*False
-        
+
         # check leafs at this level
         for i in range(M1.shape[0]):
             for j in range(M1.shape[1]):
@@ -88,47 +88,45 @@ def qthist(x, y, N=5, thresh=4, rng=[], density=True):
 
     if density:
         # following example from np.histogram:
-        # result is the value of the probability *density* function at the bin, 
+        # result is the value of the probability *density* function at the bin,
         # normalized such that the *integral* over the range is 1
         num = num / ((ymax - ymin) * (xmax - xmin)) / num.sum()
-        
+
 #     poly = np.column_stack((xmin,xmax,ymin,ymax))
     return num, xmin, xmax, ymin, ymax
 
 
-def qtcount(x,y,xmin, xmax, ymin, ymax, density=True):
+def qtcount(x, y, xmin, xmax, ymin, ymax, density=True):
     '''
     given rectangular output ranges for cells/leafs from QThist
     count the occurence rate of NEW data in these cells
-    
+
     Parameters
     ----------
     x, y : the 2 arrays of new data to compute the histogram from
-    xmin,xmax,ymin,ymax : the left, right, bottom, top 
+    xmin,xmax,ymin,ymax : the left, right, bottom, top
         edges of each bin, e.g. from previous ``qthist``.
-        
+
     density : bool, optional, default = True
         If False, the default, returns the number of samples in each bin.
         If True, returns the probability *density* function at the bin:
         ``num / len(x) / bin_area``.
-    
+
     Returns
-    -------    
+    -------
     num : the array of number counts or densities per bin
     '''
-    
+
     num = np.zeros_like(xmin)
     for k in range(len(xmin)):
-        num[k] = np.sum((x >= xmin[k]) & (x < xmax[k]) & 
+        num[k] = np.sum((x >= xmin[k]) & (x < xmax[k]) &
                         (y >= ymin[k]) & (y < ymax[k]))
-        
+
     if density:
         # following example from np.histogram:
-        # result is the value of the probability *density* function at the bin, 
+        # result is the value of the probability *density* function at the bin,
         # normalized such that the *integral* over the range is 1
 
         num = num / ((ymax - ymin) * (xmax - xmin)) / num.sum()
 
     return num
-
-    
