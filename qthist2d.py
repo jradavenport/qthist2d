@@ -92,7 +92,6 @@ def qthist(x, y, N=5, thresh=4, rng=[], density=True):
         # normalized such that the *integral* over the range is 1
         num = num / ((ymax - ymin) * (xmax - xmin)) / num.sum()
 
-#     poly = np.column_stack((xmin,xmax,ymin,ymax))
     return num, xmin, xmax, ymin, ymax
 
 
