@@ -40,7 +40,7 @@ def qthist(x, y, N=5, thresh=4, rng=[], density=True):
     '''
 
     # start w/ 2x2 array of False leafs
-    Mnext = np.empty((2**1,2**1),dtype='Bool')*False
+    Mnext = np.empty((2**1,2**1),dtype='bool')*False
 
     # the 5 quantities to save in our Tree
     num = np.array([])
@@ -67,7 +67,7 @@ def qthist(x, y, N=5, thresh=4, rng=[], density=True):
             # unless we on the last level, then pick the rest of the leafs
             M1 = ~Mnext
 
-        Mprep = np.empty((2**(k+1),2**(k+1)),dtype='Bool')*False
+        Mprep = np.empty((2**(k+1),2**(k+1)),dtype='bool')*False
 
         # check leafs at this level
         for i in range(M1.shape[0]):
